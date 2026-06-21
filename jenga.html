@@ -35,12 +35,23 @@
 
       const blockColor = block.getAttribute("data-color");
 
-      if (blockColor === targetColor) {
-        score++;
-        block.setAttribute("color", "#ffffff");
-        block.setAttribute("opacity", "0.35");
-        block.removeAttribute("moving");
-        newTarget();
+     if (blockColor === targetColor) {
+  score++;
+  block.setAttribute("color", "#ffffff");
+  block.setAttribute("opacity", "0.35");
+  block.removeAttribute("moving");
+
+  if (score >= 5) {
+    localStorage.setItem("jengaWon", "true");
+    document.querySelector("#infoText").setAttribute(
+      "value",
+      "WELL DONE!\nJENGA COMPLETED\nGO BACK TO LIBRARY"
+    );
+    return;
+  }
+
+  newTarget();
+}
       } else {
         lives--;
         updateUI();
