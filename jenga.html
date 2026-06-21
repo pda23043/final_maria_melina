@@ -10,6 +10,7 @@
     let score = 0;
     let lives = 3;
     let targetColor = "";
+
     const colors = [
       { name: "RED", value: "#c1121f" },
       { name: "BLUE", value: "#1d4ed8" },
@@ -35,23 +36,25 @@
 
       const blockColor = block.getAttribute("data-color");
 
-     if (blockColor === targetColor) {
-  score++;
-  block.setAttribute("color", "#ffffff");
-  block.setAttribute("opacity", "0.35");
-  block.removeAttribute("moving");
+      if (blockColor === targetColor) {
+        score++;
 
-  if (score >= 5) {
-    localStorage.setItem("jengaWon", "true");
-    document.querySelector("#infoText").setAttribute(
-      "value",
-      "WELL DONE!\nJENGA COMPLETED\nGO BACK TO LIBRARY"
-    );
-    return;
-  }
+        block.setAttribute("color", "#ffffff");
+        block.setAttribute("opacity", "0.35");
+        block.removeAttribute("moving");
 
-  newTarget();
-}
+        if (score >= 5) {
+          localStorage.setItem("jengaWon", "true");
+
+          document.querySelector("#infoText").setAttribute(
+            "value",
+            "WELL DONE!\nJENGA COMPLETED\nGO BACK TO LIBRARY"
+          );
+
+          return;
+        }
+
+        newTarget();
       } else {
         lives--;
         updateUI();
@@ -135,7 +138,13 @@
     physics="gravity: -1; iterations: 100; maxInterval: 0.01"
   >
 
-    <a-plane static-body height="10" width="10" rotation="-90 0 0" color="#dddddd"></a-plane>
+    <a-plane
+      static-body
+      height="10"
+      width="10"
+      rotation="-90 0 0"
+      color="#dddddd">
+    </a-plane>
 
     <a-entity id="rig" position="0 -0.5 0.5">
       <a-camera
@@ -165,6 +174,22 @@
       ></a-entity>
     </a-entity>
   </a-scene>
+
+  <a href="index.html" style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #ffb703;
+    color: black;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-family: Arial;
+    font-weight: bold;
+    z-index: 999;
+  ">
+    Πίσω στη Βιβλιοθήκη
+  </a>
 
   <script>
     var scene1 = document.getElementById("s1");
