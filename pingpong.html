@@ -148,6 +148,7 @@
 
   <button onclick="startGame()">Έναρξη</button>
   <button onclick="resetGame()">Reset</button>
+  <a href="index.html">Πίσω στη Βιβλιοθήκη</a>
 
   <p id="instructions">Χειρισμός: ← και →</p>
 
@@ -262,10 +263,12 @@
         updateScore();
         resetBall();
       }
-
-      if (playerScore >= 5) {
-        running = false;
-        message.textContent = "Μπράβο! Κέρδισες!";
+if (playerScore >= 5) {
+  running = false;
+  localStorage.setItem("pingpongWon", "true");
+  message.textContent = "Μπράβο! Κέρδισες το Ping Pong!";
+}
+     
       }
 
       if (aiScore >= 5) {
