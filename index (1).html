@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>VR Style Ping Pong</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #12324a, #020711);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 { margin-top: 15px; }
+
+    #score, #message {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 8px;
+    }
+
+    #message { color: #ffd166; }
+
+    button {
+      padding: 10px 22px;
+      font-size: 17px;
+      border: none;
+      border-radius: 10px;
+      background: #00d4ff;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 6px;
+    }
+
+    #scene {
+      width: 900px;
+      height: 520px;
+      margin: 15px auto;
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: radial-gradient(circle at center, #17405f, #05101d);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+    }
+
+    #court {
+      position: absolute;
+      left: 120px;
+      top: 55px;
+      width: 660px;
+      height: 480px;
+      background: linear-gradient(180deg, #12b76a, #05603a);
+      clip-path: polygon(24% 0%, 76% 0%, 100% 100%, 0% 100%);
+      z-index: 1;
+    }
+
+    .line {
+      position: absolute;
+      background: rgba(255,255,255,0.9);
+      z-index: 2;
+    }
+
+    #middleLine {
+      left: 448px;
+      top: 60px;
+      width: 4px;
+      height: 460px;
+    }
+
+    #net {
+      left: 310px;
+      top: 225px;
+      width: 280px;
+      height: 14px;
+      background: repeating-linear-gradient(
+        90deg,
+        white 0px,
+        white 12px,
+        transparent 12px,
+        transparent 24px
+      );
+      box-shadow: 0 0 15px white;
+    }
+
+    #aiPaddle {
+      width: 80px;
+      height: 48px;
+      background: radial-gradient(circle at 35% 30%, #ff6b6b, #9b0000);
+      border-radius: 50%;
+      position: absolute;
+      left: 410px;
+      top: 95px;
+      z-index: 4;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+    }
+
+    #playerPaddle {
+      width: 180px;
+      height: 105px;
+      background: radial-gradient(circle at 35% 30%, #ff7b7b, #a00000);
+      border-radius: 50%;
+      position: absolute;
+      left: 360px;
+      bottom: 18px;
+      z-index: 6;
+      box-shadow: 0 18px 32px rgba(0,0,0,0.75);
+    }
+
+    #playerPaddle::after {
+      content: "";
+      width: 36px;
+      height: 90px;
+      background: linear-gradient(#b87333, #5a2e0d);
+      position: absolute;
+      left: 72px;
+      bottom: -70px;
+      border-radius: 12px;
+    }
+
+    #ball {
+      width: 28px;
+      height: 28px;
+      background: radial-gradient(circle at 30% 30%, white, #ddd);
+      border-radius: 50%;
+      position: absolute;
+      left: 450px;
+      top: 290px;
+      z-index: 7;
+      box-shadow: 0 0 20px white;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #instructions {
+      opacity: 0.9;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>VR Style Ping Pong</h1>
+
+  <div id="score">Παίκτης: 0 | Υπολογιστής: 0</div>
+  <div id="message">Πάτα Έναρξη για να ξεκινήσεις.</div>
+
+  <button onclick="startGame()">Έναρξη</button>
+  <button onclick="resetGame()">Reset</button>
+
+  <p id="instructions">Χειρισμός: ← και →</p>
+
+  <div id="scene">
+    <div id="court"></div>
+    <div id="middleLine" class="line"></div>
+    <div id="net" class="line"></div>
+    <div id="aiPaddle"></div>
+    <div id="ball"></div>
+    <div id="playerPaddle"></div>
+  </div>
+
+  <script>
+    const ball = document.getElementById("ball");
+    const playerPaddle = document.getElementById("playerPaddle");
+    const aiPaddle = document.getElementById("aiPaddle");
+    const scoreText = document.getElementById("score");
+    const message = document.getElementById("message");
+
+    let playerX = 360;
+    let aiX = 410;
+
+    let ballX = 450;
+    let ballY = 290;
+
+    let speedX = 4;
+    let speedY = 5;
+
+    let playerScore = 0;
+    let aiScore = 0;
+    let running = false;
+
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "ArrowLeft") playerX -= 35;
+      if (e.key === "ArrowRight") playerX += 35;
+
+      if (playerX < 150) playerX = 150;
+      if (playerX > 570) playerX = 570;
+
+      playerPaddle.style.left = playerX + "px";
+    });
+
+    function startGame() {
+      if (!running) {
+        running = true;
+        message.textContent = "Παίζεις! Πρώτος στους 5 πόντους κερδίζει.";
+        gameLoop();
+      }
+    }
+
+    function resetGame() {
+      playerScore = 0;
+      aiScore = 0;
+      running = false;
+      updateScore();
+      resetBall();
+      message.textContent = "Το παιχνίδι μηδενίστηκε.";
+    }
+
+    function updateScore() {
+      scoreText.textContent = "Παίκτης: " + playerScore + " | Υπολογιστής: " + aiScore;
+    }
+
+    function resetBall() {
+      ballX = 450;
+      ballY = 290;
+      speedX = Math.random() > 0.5 ? 4 : -4;
+      speedY = Math.random() > 0.5 ? 5 : -5;
+      updateBall();
+    }
+
+    function updateBall() {
+      let scale = 0.45 + (ballY / 520) * 2.1;
+
+      ball.style.left = ballX + "px";
+      ball.style.top = ballY + "px";
+      ball.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
+      ball.style.boxShadow = "0 0 " + (12 + scale * 10) + "px white";
+    }
+
+    function gameLoop() {
+      if (!running) return;
+
+      ballX += speedX;
+      ballY += speedY;
+
+      if (ballX <= 245 || ballX >= 655) speedX *= -1;
+
+      aiX += (ballX - aiX - 40) * 0.04;
+      if (aiX < 330) aiX = 330;
+      if (aiX > 490) aiX = 490;
+      aiPaddle.style.left = aiX + "px";
+
+      if (ballY <= 120 && ballX > aiX - 20 && ballX < aiX + 100) {
+        speedY = Math.abs(speedY);
+        speedX += (ballX - aiX - 40) * 0.03;
+      }
+
+      if (ballY >= 440 && ballX > playerX - 20 && ballX < playerX + 200) {
+        speedY = -Math.abs(speedY);
+        speedX += (ballX - playerX - 90) * 0.04;
+      }
+
+      if (ballY < 40) {
+        playerScore++;
+        updateScore();
+        resetBall();
+      }
+
+      if (ballY > 560) {
+        aiScore++;
+        updateScore();
+        resetBall();
+      }
+
+      if (playerScore >= 5) {
+        running = false;
+        message.textContent = "Μπράβο! Κέρδισες!";
+      }
+
+      if (aiScore >= 5) {
+        running = false;
+        message.textContent = "Έχασες! Πάτα Reset.";
+      }
+
+      updateBall();
+      requestAnimationFrame(gameLoop);
+    }
+
+    resetBall();
+  </script>
+
+</body>
+</html>
