@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Three Cups Game</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #2b2d42, #111827);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 25px;
+    }
+
+    #score, #tries {
+      font-size: 22px;
+      margin: 8px;
+      font-weight: bold;
+    }
+
+    #message {
+      font-size: 24px;
+      margin: 15px;
+      color: #ffd166;
+      min-height: 35px;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 14px 30px;
+      font-size: 20px;
+      border: none;
+      border-radius: 14px;
+      background: #fca311;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 10px;
+    }
+
+    button:hover {
+      background: #ffba08;
+    }
+
+    #game {
+      width: 760px;
+      height: 390px;
+      margin: 30px auto;
+      background: linear-gradient(180deg, #9c6028, #5c3317);
+      border-radius: 25px;
+      border: 10px solid #d4a373;
+      position: relative;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    .cup {
+      width: 140px;
+      height: 180px;
+      position: absolute;
+      top: 95px;
+      cursor: pointer;
+      transition: left 0.55s ease, top 0.25s ease, transform 0.25s ease;
+      z-index: 3;
+    }
+
+    .cup::before {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 150px;
+      left: 10px;
+      top: 15px;
+      background: linear-gradient(
+        90deg,
+        #7f0000 0%,
+        #c1121f 20%,
+        #ff4d6d 45%,
+        #b00020 75%,
+        #5a0000 100%
+      );
+      clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+      border-radius: 12px 12px 35px 35px;
+      box-shadow:
+        inset -15px 0 20px rgba(0,0,0,0.35),
+        inset 15px 0 15px rgba(255,255,255,0.25),
+        0 15px 20px rgba(0,0,0,0.45);
+    }
+
+    .cup::after {
+      content: "";
+      position: absolute;
+      width: 126px;
+      height: 30px;
+      left: 7px;
+      top: 0;
+      background: radial-gradient(
+        ellipse at center,
+        #ffccd5 0%,
+        #ff8fab 50%,
+        #c1121f 100%
+      );
+      border-radius: 50%;
+      box-shadow:
+        inset 0 4px 10px rgba(255,255,255,0.5),
+        0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .cup.lift {
+      top: 25px;
+    }
+
+    .cup:hover {
+      transform: scale(1.07);
+    }
+
+    #ball {
+      width: 42px;
+      height: 42px;
+      background: radial-gradient(circle at 30% 30%, white, #ffd166, #fca311);
+      border-radius: 50%;
+      position: absolute;
+      top: 255px;
+      left: 0;
+      z-index: 2;
+      box-shadow:
+        0 0 20px rgba(255,255,255,0.8),
+        0 5px 10px rgba(0,0,0,0.4);
+      transition: left 0.4s ease;
+    }
+
+    #ball.hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Three Cups Game</h1>
+
+  <div id="score">Σκορ: <span id="points">0</span></div>
+  <div id="tries">Προσπάθειες: 3</div>
+  <div id="message">Πάτα Έναρξη για να ξεκινήσεις!</div>
+
+  <button onclick="startGame()">Έναρξη</button>
+  <button onclick="resetGame()">Reset</button>
+
+  <div id="game">
+    <div id="ball"></div>
+    <div class="cup" id="cup0" onclick="chooseCup(0)"></div>
+    <div class="cup" id="cup1" onclick="chooseCup(1)"></div>
+    <div class="cup" id="cup2" onclick="chooseCup(2)"></div>
+  </div>
+
+  <script>
+    const cups = [
+      document.getElementById("cup0"),
+      document.getElementById("cup1"),
+      document.getElementById("cup2")
+    ];
+
+    const ball = document.getElementById("ball");
+    const message = document.getElementById("message");
+    const pointsText = document.getElementById("points");
+    const triesText = document.getElementById("tries");
+
+    const positions = [110, 310, 510];
+
+    let ballCup = 1;
+    let points = 0;
+    let tries = 3;
+    let canChoose = false;
+    let currentOrder = [0, 1, 2];
+
+    function placeCups() {
+      for (let i = 0; i < 3; i++) {
+        cups[currentOrder[i]].style.left = positions[i] + "px";
+      }
+
+      const ballPositionIndex = currentOrder.indexOf(ballCup);
+      ball.style.left = (positions[ballPositionIndex] + 49) + "px";
+    }
+
+    function startGame() {
+      if (tries <= 0) return;
+
+      canChoose = false;
+      ball.classList.remove("hidden");
+
+      cups.forEach(cup => cup.classList.remove("lift"));
+
+      message.textContent = "Δες πού είναι το μπαλάκι...";
+
+      let oldBallCup = ballCup;
+
+      do {
+        ballCup = Math.floor(Math.random() * 3);
+      } while (ballCup === oldBallCup);
+
+      currentOrder = [0, 1, 2];
+      placeCups();
+
+      cups[ballCup].classList.add("lift");
+
+      setTimeout(() => {
+        cups[ballCup].classList.remove("lift");
+        ball.classList.add("hidden");
+        message.textContent = "Τα ποτήρια ανακατεύονται...";
+      }, 1300);
+
+      setTimeout(() => {
+        let difficulty = 8 + points * 2;
+        shuffleCups(difficulty);
+      }, 1800);
+    }
+
+    function shuffleCups(times) {
+      let count = 0;
+
+      const interval = setInterval(() => {
+        const a = Math.floor(Math.random() * 3);
+        let b = Math.floor(Math.random() * 3);
+
+        while (a === b) {
+          b = Math.floor(Math.random() * 3);
+        }
+
+        const temp = currentOrder[a];
+        currentOrder[a] = currentOrder[b];
+        currentOrder[b] = temp;
+
+        placeCups();
+
+        count++;
+
+        if (count >= times) {
+          clearInterval(interval);
+          canChoose = true;
+          message.textContent = "Διάλεξε ποτήρι!";
+        }
+      }, 600);
+    }
+
+    function chooseCup(index) {
+      if (!canChoose) return;
+
+      canChoose = false;
+
+      const chosenCup = currentOrder[index];
+
+      ball.classList.remove("hidden");
+      placeCups();
+
+      cups[chosenCup].classList.add("lift");
+
+      setTimeout(() => {
+        if (chosenCup === ballCup) {
+          points++;
+          pointsText.textContent = points;
+          message.textContent = "Σωστά! Βρήκες το μπαλάκι!";
+        } else {
+          tries--;
+          triesText.textContent = "Προσπάθειες: " + tries;
+          message.textContent = "Λάθος! Έχασες μία προσπάθεια.";
+          cups[ballCup].classList.add("lift");
+
+          if (tries <= 0) {
+            message.textContent = "Game Over! Έχασες και τις 3 προσπάθειες.";
+          }
+        }
+      }, 400);
+
+      setTimeout(() => {
+        cups.forEach(cup => cup.classList.remove("lift"));
+
+        if (tries > 0) {
+          ball.classList.add("hidden");
+          message.textContent += " Πάτα Έναρξη για νέο γύρο.";
+        }
+      }, 2000);
+    }
+
+    function resetGame() {
+      points = 0;
+      tries = 3;
+      canChoose = false;
+      currentOrder = [0, 1, 2];
+      ballCup = 1;
+
+      pointsText.textContent = points;
+      triesText.textContent = "Προσπάθειες: " + tries;
+      message.textContent = "Το παιχνίδι μηδενίστηκε. Πάτα Έναρξη.";
+
+      cups.forEach(cup => cup.classList.remove("lift"));
+      ball.classList.remove("hidden");
+      placeCups();
+    }
+
+    placeCups();
+  </script>
+
+</body>
+</html>
