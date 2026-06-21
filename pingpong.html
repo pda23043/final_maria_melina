@@ -13,25 +13,40 @@
       text-align: center;
     }
 
-    h1 { margin-top: 15px; }
+    h1 {
+      margin-top: 15px;
+    }
 
-    #score, #message {
+    #score,
+    #message {
       font-size: 22px;
       font-weight: bold;
       margin: 8px;
     }
 
-    #message { color: #ffd166; }
+    #message {
+      color: #ffd166;
+      min-height: 28px;
+    }
 
-    button {
+    button,
+    a {
+      display: inline-block;
       padding: 10px 22px;
       font-size: 17px;
       border: none;
       border-radius: 10px;
       background: #00d4ff;
+      color: black;
       font-weight: bold;
       cursor: pointer;
       margin: 6px;
+      text-decoration: none;
+    }
+
+    button:hover,
+    a:hover {
+      background: #48e5ff;
     }
 
     #scene {
@@ -54,6 +69,7 @@
       background: linear-gradient(180deg, #12b76a, #05603a);
       clip-path: polygon(24% 0%, 76% 0%, 100% 100%, 0% 100%);
       z-index: 1;
+      box-shadow: inset 0 0 40px rgba(255,255,255,0.12);
     }
 
     .line {
@@ -136,6 +152,14 @@
       opacity: 0.9;
       font-size: 15px;
     }
+
+    @media (max-width: 950px) {
+      #scene {
+        transform: scale(0.85);
+        transform-origin: top center;
+        margin-bottom: -60px;
+      }
+    }
   </style>
 </head>
 
@@ -179,11 +203,18 @@
 
     let playerScore = 0;
     let aiScore = 0;
+
     let running = false;
+    let animationId = null;
 
     document.addEventListener("keydown", function(e) {
-      if (e.key === "ArrowLeft") playerX -= 35;
-      if (e.key === "ArrowRight") playerX += 35;
+      if (e.key === "ArrowLeft") {
+        playerX -= 35;
+      }
+
+      if (e.key === "ArrowRight") {
+        playerX += 35;
+      }
 
       if (playerX < 150) playerX = 150;
       if (playerX > 570) playerX = 570;
@@ -200,23 +231,39 @@
     }
 
     function resetGame() {
+      running = false;
+
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
       playerScore = 0;
       aiScore = 0;
-      running = false;
+      playerX = 360;
+      aiX = 410;
+
+      playerPaddle.style.left = playerX + "px";
+      aiPaddle.style.left = aiX + "px";
+
       updateScore();
       resetBall();
-      message.textContent = "Το παιχνίδι μηδενίστηκε.";
+
+      message.textContent = "Το παιχνίδι μηδενίστηκε. Πάτα Έναρξη.";
     }
 
     function updateScore() {
-      scoreText.textContent = "Παίκτης: " + playerScore + " | Υπολογιστής: " + aiScore;
+      scoreText.textContent =
+        "Παίκτης: " + playerScore + " | Υπολογιστής: " + aiScore;
     }
 
     function resetBall() {
       ballX = 450;
       ballY = 290;
+
       speedX = Math.random() > 0.5 ? 4 : -4;
       speedY = Math.random() > 0.5 ? 5 : -5;
+
       updateBall();
     }
 
@@ -225,8 +272,10 @@
 
       ball.style.left = ballX + "px";
       ball.style.top = ballY + "px";
-      ball.style.transform = "translate(-50%, -50%) scale(" + scale + ")";
-      ball.style.boxShadow = "0 0 " + (12 + scale * 10) + "px white";
+      ball.style.transform =
+        "translate(-50%, -50%) scale(" + scale + ")";
+      ball.style.boxShadow =
+        "0 0 " + (12 + scale * 10) + "px white";
     }
 
     function gameLoop() {
@@ -235,19 +284,31 @@
       ballX += speedX;
       ballY += speedY;
 
-      if (ballX <= 245 || ballX >= 655) speedX *= -1;
+      if (ballX <= 245 || ballX >= 655) {
+        speedX *= -1;
+      }
 
       aiX += (ballX - aiX - 40) * 0.04;
+
       if (aiX < 330) aiX = 330;
       if (aiX > 490) aiX = 490;
+
       aiPaddle.style.left = aiX + "px";
 
-      if (ballY <= 120 && ballX > aiX - 20 && ballX < aiX + 100) {
+      if (
+        ballY <= 120 &&
+        ballX > aiX - 20 &&
+        ballX < aiX + 100
+      ) {
         speedY = Math.abs(speedY);
         speedX += (ballX - aiX - 40) * 0.03;
       }
 
-      if (ballY >= 440 && ballX > playerX - 20 && ballX < playerX + 200) {
+      if (
+        ballY >= 440 &&
+        ballX > playerX - 20 &&
+        ballX < playerX + 200
+      ) {
         speedY = -Math.abs(speedY);
         speedX += (ballX - playerX - 90) * 0.04;
       }
@@ -263,21 +324,22 @@
         updateScore();
         resetBall();
       }
-if (playerScore >= 5) {
-  running = false;
-  localStorage.setItem("pingpongWon", "true");
-  message.textContent = "Μπράβο! Κέρδισες το Ping Pong!";
-}
-     
+
+      if (playerScore >= 5) {
+        running = false;
+        localStorage.setItem("pingpongWon", "true");
+        message.textContent = "Μπράβο! Κέρδισες το Ping Pong!";
+        return;
       }
 
       if (aiScore >= 5) {
         running = false;
         message.textContent = "Έχασες! Πάτα Reset.";
+        return;
       }
 
       updateBall();
-      requestAnimationFrame(gameLoop);
+      animationId = requestAnimationFrame(gameLoop);
     }
 
     resetBall();
